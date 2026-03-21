@@ -830,6 +830,7 @@ function setupApp() {
   if (isCollector) document.getElementById('kpi-vendors').textContent = '1';
 
   loadDashboard();
+  loadFormVendors();
   loadFilterDropdowns();
 
   // ── CHECK IF USER IS ON DEFAULT PASSWORD ──
@@ -842,23 +843,20 @@ function setupApp() {
       banner.style.display = 'none';
     }
   }
-
-  // If collector — auto-fill their form after vendors load
+  // If collector — auto-set their vendor and collector
   if (currentUser.role === 'collector') {
     if (currentUser.collector_id) {
-      // Wait for vendors to load then lock the form to their profile
-      loadFormVendors().then(() => autoFillCollector());
+      autoFillCollector();
     } else {
-      loadFormVendors();
+      // collector_id not linked — show warning on form
       setTimeout(()=>{
         const wrap = document.getElementById('f-vendor-wrap');
-        if (wrap && !wrap.querySelector('.warning-msg')) wrap.insertAdjacentHTML('beforebegin',
-          '<div class="warning-msg" style="background:var(--gold-light);border:1px solid var(--gold-mid);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--navy)">⚠️ Your account is not yet linked to a collector profile. Please contact your admin to update your account.</div>');
+        if (wrap) wrap.insertAdjacentHTML('beforebegin',
+          '<div style="background:var(--gold-light);border:1px solid var(--gold-mid);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--navy)">⚠️ Your account is not yet linked to a collector profile. Please contact your admin to update your account.</div>');
       }, 500);
     }
-  } else {
-    loadFormVendors();
   }
+}
 
 async function autoFillCollector() {
   // ── Fetch collector profile using collector_id OR match by full_name ──
@@ -938,13 +936,10 @@ function showPg(name, el) {
     vendors:'Vendors', collectors:'Collectors', users:'User Accounts', changepwd:'Change Password'
   }[name];
   document.getElementById('sidebar').classList.remove('open');
-  if (name === 'activity')   loadActivityLog();
-  if (name === 'vendors')    loadVendors();
+  if (name === 'activity')  loadActivityLog();
+  if (name === 'vendors')   loadVendors();
   if (name === 'collectors') loadCollectorsList();
-  if (name === 'users')      loadUsers();
-  if (name === 'log' && currentUser?.role === 'collector' && currentUser?.collector_id) {
-    setTimeout(() => autoFillCollector(), 100);
-  }
+  if (name === 'users')     loadUsers();
 }
 
 // ── DASHBOARD ──
@@ -1056,12 +1051,9 @@ async function loadFormVendors() {
   sel.innerHTML = '<option value="">— Select Vendor —</option>';
   (data||[]).forEach(v => sel.insertAdjacentHTML('beforeend',`<option value="${v.id}" data-name="${v.vendor_name}">${v.vendor_name}</option>`));
   if (cur) sel.value = cur;
-  return data; // return for chaining
 }
 
 async function loadCollectorsByVendor() {
-  // Collectors should not trigger this — their form is locked by autoFillCollector
-  if (currentUser?.role === 'collector') return;
   const vid = document.getElementById('fv').value;
   const sel = document.getElementById('fcol');
   sel.innerHTML = '<option value="">— Select Collector —</option>';
