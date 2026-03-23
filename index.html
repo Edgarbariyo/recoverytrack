@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RecoveryTrack — Stanbic Recoveries & Rehabilitation </title>
+<title>RecoveryTrack — Stanbic Recoveries & Rehabilitation</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -546,14 +546,14 @@ tr:hover td{background:var(--blue-light)}
         <select id="nu-vendor" onchange="loadModalCollectors()"><option value="">— Select Vendor —</option></select>
       </div>
 
-
-      <!-- COLLECTOR: vendor dropdown only - auto-links by name -->
+      <!-- COLLECTOR: vendor then collector dropdown -->
       <div class="ff full" id="nu-collector-vendor-wrap" style="display:none">
         <label>Vendor</label>
-        <select id="nu-collector-vendor"><option value="">— Select Vendor —</option></select>
+        <select id="nu-collector-vendor" onchange="loadModalCollectors()"><option value="">— Select Vendor —</option></select>
       </div>
-      <div class="ff full" id="nu-collector-wrap" style="display:none" style="display:none">
-        <!-- collector profile auto-linked by name via SQL -->
+      <div class="ff full" id="nu-collector-wrap" style="display:none">
+        <label>Assign to Collector Profile</label>
+        <select id="nu-collector"><option value="">— Select Collector —</option></select>
       </div>
     </div>
     <div class="modal-footer">
@@ -1644,11 +1644,9 @@ async function createUser() {
     if (!vendorId) { showToast('Please select a vendor','error'); return; }
   } else if (role === 'collector') {
     vendorId = document.getElementById('nu-collector-vendor').value || null;
+    colId    = document.getElementById('nu-collector').value || null;
     if (!vendorId) { showToast('Please select a vendor for this collector','error'); return; }
-    // Auto-link collector profile by matching full name
-    const { data: colData } = await sb.from('collectors')
-      .select('id').eq('full_name', name).eq('vendor_id', vendorId).limit(1).single();
-    if (colData) colId = colData.id;
+    if (!colId)    { showToast('Please select a collector profile','error'); return; }
   }
 
   const hash = await hashPwd(password);
