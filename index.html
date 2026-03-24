@@ -481,8 +481,8 @@ tr:hover td{background:var(--blue-light)}
           <div class="th"><h3>📋 Submissions</h3><span id="act-count" style="font-size:11px;color:var(--muted)">Loading...</span></div>
           <div style="overflow-x:auto">
             <table>
-              <thead><tr><th>Date</th><th>Collector</th><th>Vendor</th><th>Account No.</th><th>Customer</th><th>Action Taken</th><th>Calls</th><th>Visits</th><th>Meetings</th><th>Skip</th><th>Collections (UGX)</th><th>Status</th></tr></thead>
-              <tbody id="atb"><tr><td colspan="12" style="text-align:center;color:var(--muted);padding:20px">Loading...</td></tr></tbody>
+              <thead><tr><th>Date</th><th>Collector</th><th>Vendor</th><th>Account No.</th><th>Customer</th><th>Action Taken</th><th>PTP Amount</th><th>PTP Date</th><th>Pay Plan Type</th><th>Pay Plan Amount</th><th>Pay Plan Date</th><th>Settlement Type</th><th>Settlement Amount</th><th>Settlement Date</th><th>Skip Trace Status</th><th>Calls</th><th>Visits</th><th>Meetings</th><th>Skip</th><th>Collections (UGX)</th><th>Status</th></tr></thead>
+              <tbody id="atb"><tr><td colspan="21" style="text-align:center;color:var(--muted);padding:20px">Loading...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1308,7 +1308,7 @@ function clearForm() {
 let currentLogData = []; // Store for export
 
 async function loadActivityLog() {
-  document.getElementById('atb').innerHTML='<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:20px">Loading...</td></tr>';
+  document.getElementById('atb').innerHTML='<tr><td colspan="21" style="text-align:center;color:var(--muted);padding:20px">Loading...</td></tr>';
   document.getElementById('export-summary').style.display='none';
 
   let query = sb.from('activity_logs').select('*').order('submission_date',{ascending:false}).order('created_at',{ascending:false}).limit(500);
@@ -1373,11 +1373,20 @@ async function loadActivityLog() {
       <td style="font-weight:600;color:var(--navy)">${r.account_number||'—'}</td>
       <td>${r.customer_name||'—'}</td>
       <td><span class="badge ${r.action_taken==='Full Payment Received'||r.action_taken==='Partial Payment Received'?'bg':r.action_taken==='Promise to Pay'?'bgo':r.action_taken==='Refused to Pay'||r.action_taken==='Not Found / Unreachable'?'br':'bb'}">${r.action_taken||'—'}</span></td>
+      <td style="color:var(--green)">${r.ptp_amount?r.ptp_amount.toLocaleString():'—'}</td>
+      <td>${r.ptp_date||'—'}</td>
+      <td>${r.payment_plan_type||'—'}</td>
+      <td style="color:var(--green)">${r.payment_plan_amount?r.payment_plan_amount.toLocaleString():'—'}</td>
+      <td>${r.payment_plan_date||'—'}</td>
+      <td>${r.settlement_type||'—'}</td>
+      <td style="color:var(--green)">${r.settlement_amount?r.settlement_amount.toLocaleString():'—'}</td>
+      <td>${r.settlement_date||'—'}</td>
+      <td>${r.skiptrace_status?`<span class="badge ${r.skiptrace_status==='Skip Trace Successful'?'bg':r.skiptrace_status==='Skip Trace Unsuccessful'?'br':'bgo'}">${r.skiptrace_status}</span>`:'—'}</td>
       <td>${r.calls_made||0}</td><td>${r.field_visits||0}</td><td>${r.meetings_held||0}</td><td>${r.skip_trace||0}</td>
       <td style="color:var(--green);font-weight:700">${(r.daily_collections_ugx||0).toLocaleString()}</td>
       <td><span class="badge ${r.status==='Submitted'?'bg':'bgo'}">${r.status||'Submitted'}</span></td>
     </tr>`).join('')
-    : '<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:24px">No records found</td></tr>';
+    : '<tr><td colspan="21" style="text-align:center;color:var(--muted);padding:24px">No records found</td></tr>';
 }
 
 // ── EXPORT TO EXCEL ──
@@ -1386,26 +1395,35 @@ function exportToExcel() {
 
   // Build clean export rows
   const exportRows = currentLogData.map(r => ({
-    'Date':                   r.submission_date || '',
-    'Collector':              r.collector_name  || '',
-    'Vendor':                 r.vendor_name     || '',
-    'Account Number':         r.account_number  || '',
-    'Customer Name':          r.customer_name   || '',
-    'Outstanding Balance':    r.outstanding_balance || 0,
-    'Action Taken':           r.action_taken    || '',
-    'Calls Made':             r.calls_made      || 0,
-    'Field Visits':           r.field_visits    || 0,
-    'Meetings Held':          r.meetings_held   || 0,
-    'Conversations':          r.conversations   || 0,
-    'Skip Traces':            r.skip_trace      || 0,
-    'Loan Accounts Worked':   r.loan_accounts_worked || 0,
-    'Promises to Pay':        r.promises_to_pay || 0,
-    'Daily Collections (UGX)':r.daily_collections_ugx || 0,
-    'GPS Latitude':           r.gps_lat         || '',
-    'GPS Longitude':          r.gps_lng         || '',
-    'Notes':                  r.notes           || '',
-    'Status':                 r.status          || '',
-    'Submitted At':           r.created_at ? new Date(r.created_at).toLocaleString('en-GB') : '',
+    'Date':                    r.submission_date || '',
+    'Collector':               r.collector_name  || '',
+    'Vendor':                  r.vendor_name     || '',
+    'Account Number':          r.account_number  || '',
+    'Customer Name':           r.customer_name   || '',
+    'Outstanding Balance':     r.outstanding_balance || 0,
+    'Action Taken':            r.action_taken    || '',
+    'PTP Amount (UGX)':        r.ptp_amount      || '',
+    'PTP Date':                r.ptp_date        || '',
+    'Payment Plan Type':       r.payment_plan_type || '',
+    'Payment Plan Amount (UGX)': r.payment_plan_amount || '',
+    'Payment Plan Date':       r.payment_plan_date || '',
+    'Settlement Type':         r.settlement_type || '',
+    'Settlement Amount (UGX)': r.settlement_amount || '',
+    'Settlement Date':         r.settlement_date || '',
+    'Skip Trace Status':       r.skiptrace_status || '',
+    'Calls Made':              r.calls_made      || 0,
+    'Field Visits':            r.field_visits    || 0,
+    'Meetings Held':           r.meetings_held   || 0,
+    'Conversations':           r.conversations   || 0,
+    'Skip Traces':             r.skip_trace      || 0,
+    'Loan Accounts Worked':    r.loan_accounts_worked || 0,
+    'Promises to Pay':         r.promises_to_pay || 0,
+    'Daily Collections (UGX)': r.daily_collections_ugx || 0,
+    'GPS Latitude':            r.gps_lat         || '',
+    'GPS Longitude':           r.gps_lng         || '',
+    'Notes':                   r.notes           || '',
+    'Status':                  r.status          || '',
+    'Submitted At':            r.created_at ? new Date(r.created_at).toLocaleString('en-GB') : '',
   }));
 
   // Summary sheet
