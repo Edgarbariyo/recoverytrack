@@ -68,7 +68,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .lbtn{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:4px}
 .lbtn:hover{color:var(--red)}
 .mc{flex:1;overflow-y:auto;padding:24px 26px;background:var(--bg)}
-.pg{display:none;animation:up .25s ease}.pg.on{display:block;width:100%}
+.pg{display:none;animation:up .25s ease}.pg.on{display:block}
 .ph{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .ph h1{font-size:22px;font-weight:800;color:var(--navy)}
 .ph p{color:var(--muted);font-size:13px;margin-top:3px}
@@ -350,9 +350,11 @@ tr:hover td{background:var(--blue-light)}
                 <div class="ff"><label>Customer Name <span style="color:var(--red)">*</span></label><input type="text" id="f-custname" placeholder="Borrower full name" oninput="markOk('f-custname')"></div>
                 <div class="ff"><label>Outstanding Balance (UGX)</label><div class="nw"><input type="number" id="f-balance" placeholder="0" min="0"><span class="nh">UGX</span></div></div>
                 <div class="ff"><label>Action Taken <span style="color:var(--red)">*</span></label>
-                  <select id="f-action" onchange="markOk('f-action');onActionChange()">
+                  <select id="f-action" onchange="markOk('f-action');toggleActionFields()">
                     <option value="">— Select Action —</option>
                     <option>Promise to Pay</option>
+                    <option>Settlement Plan</option>
+                    <option>Payment Plan</option>
                     <option>Full Payment Received</option>
                     <option>Partial Payment Received</option>
                     <option>Refused to Pay</option>
@@ -366,51 +368,72 @@ tr:hover td{background:var(--blue-light)}
                 </div>
               </div>
 
-              <!-- PROMISE TO PAY sub-fields -->
-              <div id="ptp-fields" style="display:none;margin-top:14px;padding:14px 16px;background:var(--gold-light);border:1.5px solid var(--gold-mid);border-radius:8px">
-                <div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">📅 Promise to Pay Details</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-                  <div class="ff">
-                    <label>Promise Date <span style="color:var(--red)">*</span></label>
-                    <input type="date" id="f-ptp-date" oninput="markOk('f-ptp-date')">
-                  </div>
-                  <div class="ff">
-                    <label>Promised Amount (UGX) <span style="color:var(--red)">*</span></label>
-                    <div class="nw"><input type="number" id="f-ptp-amount" placeholder="0" min="0" oninput="markOk('f-ptp-amount')"><span class="nh">UGX</span></div>
-                  </div>
-                  <div class="ff full">
-                    <label>Payment Plan</label>
-                    <select id="f-ptp-plan">
-                      <option value="">— Select Plan —</option>
-                      <option>Lump Sum</option>
-                      <option>Instalment Plan</option>
-                      <option>Settlement</option>
-                    </select>
-                  </div>
+              <!-- CONDITIONAL FIELDS based on Action Taken -->
+
+              <!-- Promise to Pay -->
+              <div id="f-ptp-wrap" style="display:none;margin-top:12px;display:none;grid-template-columns:1fr 1fr;gap:14px">
+                <div class="ff">
+                  <label>PTP Amount (UGX) <span style="color:var(--red)">*</span></label>
+                  <div class="nw"><input type="number" id="f-ptp-amount" placeholder="0" min="0"><span class="nh">UGX</span></div>
+                </div>
+                <div class="ff">
+                  <label>PTP Date <span style="color:var(--red)">*</span></label>
+                  <input type="date" id="f-ptp-date">
                 </div>
               </div>
 
-              <!-- SKIP TRACE sub-fields -->
-              <div id="skip-fields" style="display:none;margin-top:14px;padding:14px 16px;background:var(--blue-light);border:1.5px solid var(--border2);border-radius:8px">
-                <div style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">🔍 Skip Trace Details</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-                  <div class="ff">
-                    <label>Skiptrace Status <span style="color:var(--red)">*</span></label>
-                    <select id="f-skip-status" onchange="markOk('f-skip-status');onSkipStatusChange()">
-                      <option value="">— Select Status —</option>
-                      <option value="Ongoing">Skiptrace Ongoing</option>
-                      <option value="Successful">Skiptrace Successful</option>
-                      <option value="Unsuccessful">Skiptrace Unsuccessful</option>
-                    </select>
-                  </div>
-                  <div class="ff" id="skip-location-wrap" style="display:none">
-                    <label>New Location / Contact Found</label>
-                    <input type="text" id="f-skip-location" placeholder="e.g. New phone / address">
-                  </div>
+              <!-- Payment Plan -->
+              <div id="f-payplan-wrap" style="display:none;margin-top:12px;display:none;grid-template-columns:1fr 1fr 1fr;gap:14px">
+                <div class="ff">
+                  <label>Payment Type <span style="color:var(--red)">*</span></label>
+                  <select id="f-payplan-type">
+                    <option value="">— Select Type —</option>
+                    <option>Lump Sum</option>
+                    <option>Instalment Plan</option>
+                  </select>
+                </div>
+                <div class="ff">
+                  <label>Amount (UGX) <span style="color:var(--red)">*</span></label>
+                  <div class="nw"><input type="number" id="f-payplan-amount" placeholder="0" min="0"><span class="nh">UGX</span></div>
+                </div>
+                <div class="ff">
+                  <label>Payment Date <span style="color:var(--red)">*</span></label>
+                  <input type="date" id="f-payplan-date">
                 </div>
               </div>
 
-            </div>
+              <!-- Settlement Plan -->
+              <div id="f-settlement-wrap" style="display:none;margin-top:12px;display:none;grid-template-columns:1fr 1fr 1fr;gap:14px">
+                <div class="ff">
+                  <label>Settlement Type <span style="color:var(--red)">*</span></label>
+                  <select id="f-settlement-type">
+                    <option value="">— Select Type —</option>
+                    <option>Lump Sum</option>
+                    <option>Instalment Plan</option>
+                  </select>
+                </div>
+                <div class="ff">
+                  <label>Settlement Amount (UGX) <span style="color:var(--red)">*</span></label>
+                  <div class="nw"><input type="number" id="f-settlement-amount" placeholder="0" min="0"><span class="nh">UGX</span></div>
+                </div>
+                <div class="ff">
+                  <label>Settlement Date <span style="color:var(--red)">*</span></label>
+                  <input type="date" id="f-settlement-date">
+                </div>
+              </div>
+
+              <!-- Skip Trace Status -->
+              <div id="f-skiptrace-wrap" style="display:none;margin-top:12px">
+                <div class="ff">
+                  <label>Skip Trace Status <span style="color:var(--red)">*</span></label>
+                  <select id="f-skiptrace-status">
+                    <option value="">— Select Status —</option>
+                    <option>Skip Trace Ongoing</option>
+                    <option>Skip Trace Successful</option>
+                    <option>Skip Trace Unsuccessful</option>
+                  </select>
+                </div>
+              </div>
             </div>
             <!-- ACTIVITY METRICS -->
             <div class="ff" style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.8px;padding-top:4px">📊 Activity Metrics <span style="color:var(--red);font-weight:400;font-size:10px;text-transform:none;letter-spacing:0">* at least one required</span></div>
@@ -1130,32 +1153,9 @@ function markOk(id) {
   if (el) { el.style.borderColor=''; el.style.background=''; }
 }
 function clearHighlights() {
-  ['fd','fv','fcol','f-accnum','f-custname','f-action','fc','fv2','fm','fcon','fsk','fa',
-   'f-ptp-date','f-ptp-amount','f-skip-status'].forEach(markOk);
+  ['fd','fv','fcol','f-accnum','f-custname','f-action','fc','fv2','fm','fcon','fsk','fa'].forEach(markOk);
   const gpsBtn = document.getElementById('gps-btn');
   if(gpsBtn) { gpsBtn.style.borderColor=''; gpsBtn.style.background=''; gpsBtn.style.color=''; }
-}
-
-function onActionChange() {
-  const action = document.getElementById('f-action').value;
-  document.getElementById('ptp-fields').style.display  = action === 'Promise to Pay' ? 'block' : 'none';
-  document.getElementById('skip-fields').style.display = action === 'Skip Traced'    ? 'block' : 'none';
-  if (action !== 'Promise to Pay') {
-    document.getElementById('f-ptp-date').value   = '';
-    document.getElementById('f-ptp-amount').value = '';
-    document.getElementById('f-ptp-plan').value   = '';
-  }
-  if (action !== 'Skip Traced') {
-    document.getElementById('f-skip-status').value   = '';
-    document.getElementById('f-skip-location').value = '';
-    document.getElementById('skip-location-wrap').style.display = 'none';
-  }
-}
-
-function onSkipStatusChange() {
-  const status = document.getElementById('f-skip-status').value;
-  document.getElementById('skip-location-wrap').style.display = status === 'Successful' ? 'block' : 'none';
-  if (status !== 'Successful') document.getElementById('f-skip-location').value = '';
 }
 function highlightErrors() {
   clearHighlights();
@@ -1166,14 +1166,6 @@ function highlightErrors() {
   if (!document.getElementById('f-accnum').value.trim())             markError('f-accnum');
   if (!document.getElementById('f-custname').value.trim())           markError('f-custname');
   if (!document.getElementById('f-action').value)                    markError('f-action');
-  const actionVal2 = document.getElementById('f-action').value;
-  if (actionVal2 === 'Promise to Pay') {
-    if (!document.getElementById('f-ptp-date').value)                   markError('f-ptp-date');
-    if (!parseInt(document.getElementById('f-ptp-amount').value||'0'))  markError('f-ptp-amount');
-  }
-  if (actionVal2 === 'Skip Traced') {
-    if (!document.getElementById('f-skip-status').value) markError('f-skip-status');
-  }
   const calls  = parseInt(document.getElementById('fc').value)||0;
   const visits = parseInt(document.getElementById('fv2').value)||0;
   const meets  = parseInt(document.getElementById('fm').value)||0;
@@ -1186,6 +1178,38 @@ function highlightErrors() {
   if (!gpsLat || !gpsLng) {
     const gpsBtn = document.getElementById('gps-btn');
     if(gpsBtn) { gpsBtn.style.borderColor='var(--red)'; gpsBtn.style.background='var(--red-light)'; gpsBtn.style.color='var(--red)'; }
+  }
+}
+
+function toggleActionFields() {
+  const action = document.getElementById('f-action').value;
+  // Hide all conditional sections
+  ['f-ptp-wrap','f-settlement-wrap','f-payplan-wrap','f-skiptrace-wrap']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+  // Show relevant section
+  if (action === 'Promise to Pay') {
+    const w = document.getElementById('f-ptp-wrap');
+    w.style.display = 'grid';
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+    const d = document.getElementById('f-ptp-date');
+    if (d && !d.value) d.value = tomorrow.toISOString().split('T')[0];
+  }
+  if (action === 'Payment Plan') {
+    const w = document.getElementById('f-payplan-wrap');
+    w.style.display = 'grid';
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+    const d = document.getElementById('f-payplan-date');
+    if (d && !d.value) d.value = tomorrow.toISOString().split('T')[0];
+  }
+  if (action === 'Settlement Plan') {
+    const w = document.getElementById('f-settlement-wrap');
+    w.style.display = 'grid';
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+    const d = document.getElementById('f-settlement-date');
+    if (d && !d.value) d.value = tomorrow.toISOString().split('T')[0];
+  }
+  if (action === 'Skip Traced') {
+    document.getElementById('f-skiptrace-wrap').style.display = 'block';
   }
 }
 
@@ -1206,15 +1230,6 @@ async function submitLog() {
   if (!document.getElementById('f-custname').value.trim()) errors.push('Customer Name');
   if (!document.getElementById('f-action').value)          errors.push('Action Taken');
   if (!gpsLat || !gpsLng)                                  errors.push('GPS Location (tap 📍 Capture My Location)');
-
-  const actionVal = document.getElementById('f-action').value;
-  if (actionVal === 'Promise to Pay') {
-    if (!document.getElementById('f-ptp-date').value)              errors.push('Promise Date');
-    if (!parseInt(document.getElementById('f-ptp-amount').value))  errors.push('Promised Amount');
-  }
-  if (actionVal === 'Skip Traced') {
-    if (!document.getElementById('f-skip-status').value) errors.push('Skiptrace Status');
-  }
 
   const calls  = parseInt(document.getElementById('fc').value)||0;
   const visits = parseInt(document.getElementById('fv2').value)||0;
@@ -1244,11 +1259,15 @@ async function submitLog() {
     customer_name: document.getElementById('f-custname').value||null,
     outstanding_balance: parseInt(document.getElementById('f-balance').value)||0,
     action_taken: document.getElementById('f-action').value||null,
-    ptp_date:     (document.getElementById('f-action').value === 'Promise to Pay' ? document.getElementById('f-ptp-date').value||null : null),
-    ptp_amount:   (document.getElementById('f-action').value === 'Promise to Pay' ? parseInt(document.getElementById('f-ptp-amount').value)||null : null),
-    ptp_plan:     (document.getElementById('f-action').value === 'Promise to Pay' ? document.getElementById('f-ptp-plan').value||null : null),
-    skip_status:  (document.getElementById('f-action').value === 'Skip Traced' ? document.getElementById('f-skip-status').value||null : null),
-    skip_location:(document.getElementById('f-action').value === 'Skip Traced' && document.getElementById('f-skip-status').value === 'Successful' ? document.getElementById('f-skip-location').value||null : null),
+    ptp_amount: document.getElementById('f-ptp-amount')?.value ? parseFloat(document.getElementById('f-ptp-amount').value) : null,
+    ptp_date: document.getElementById('f-ptp-date')?.value || null,
+    settlement_amount: document.getElementById('f-settlement-amount')?.value ? parseFloat(document.getElementById('f-settlement-amount').value) : null,
+    settlement_date: document.getElementById('f-settlement-date')?.value || null,
+    settlement_type: document.getElementById('f-settlement-type')?.value || null,
+    payment_plan_amount: document.getElementById('f-payplan-amount')?.value ? parseFloat(document.getElementById('f-payplan-amount').value) : null,
+    payment_plan_date: document.getElementById('f-payplan-date')?.value || null,
+    payment_plan_type: document.getElementById('f-payplan-type')?.value || null,
+    skiptrace_status: document.getElementById('f-skiptrace-status')?.value || null,
     calls_made: parseInt(document.getElementById('fc').value)||0,
     field_visits: parseInt(document.getElementById('fv2').value)||0,
     meetings_held: parseInt(document.getElementById('fm').value)||0,
@@ -1271,13 +1290,13 @@ async function submitLog() {
 
 function clearForm() {
   ['fc','fv2','fm','fcon','fsk','fa','fla','fptp','fn','f-accnum','f-custname','f-balance',
-   'f-ptp-date','f-ptp-amount','f-skip-location'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+   'f-ptp-amount','f-ptp-date','f-settlement-amount','f-settlement-date','f-settlement-type',
+   'f-payplan-amount','f-payplan-date','f-payplan-type','f-skiptrace-status']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   const fa = document.getElementById('f-action'); if(fa) fa.value='';
-  const fptpPlan   = document.getElementById('f-ptp-plan');   if(fptpPlan)   fptpPlan.value='';
-  const fSkipStatus= document.getElementById('f-skip-status');if(fSkipStatus) fSkipStatus.value='';
-  document.getElementById('ptp-fields').style.display          = 'none';
-  document.getElementById('skip-fields').style.display         = 'none';
-  document.getElementById('skip-location-wrap').style.display  = 'none';
+  // Hide all conditional sections
+  ['f-ptp-wrap','f-settlement-wrap','f-payplan-wrap','f-skiptrace-wrap']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
   const gd=document.getElementById('gd');
   gd.textContent='Not captured yet'; gd.style.color='var(--muted)';
   const gpsBtn=document.getElementById('gps-btn');
